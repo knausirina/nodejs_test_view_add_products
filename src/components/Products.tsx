@@ -2,9 +2,11 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useProductStore } from "../store/productStore";
+import { productService } from "@/services/productService";
 import ProductCard from "./ProductCard";
 import Pagination from "./Pagination";
-import {DelaySearchMs, ItemsPerPage} from "./configs/Config";
+import { DELAY_SEARCH_MS, ITEMS_PER_PAGE } from "../configs/Config";
+import { Product } from "@/types/product";
 
 enum TypeVisibleCards {
   All,
@@ -12,46 +14,65 @@ enum TypeVisibleCards {
 }
 
 export default function Products() {
-  const fetchProducts = useProductStore(state => state.fetchProducts);
-  const products = useProductStore(state => state.products);
-  const favorites = useProductStore(state => state.favorites);
-  const currentPage = useProductStore(state => state.currentPage);
-  const loading = useProductStore(state => state.loading);
-  const visibleFilter = useProductStore(state => state.visibleFilter);
-  const setVisibleFilter = useProductStore(state => state.setVisibleFilter);
-  const [search, setSearch] = useState<string>("");
+  const allProducts = useProductStore((state) => state.books);
+  const favorites = useProductStore((state) => state.favorites);
+  const loading = useProductStore((state) => state.loading);
+
+  const [search, setSearch] = useState("");
+  const [typeVisibleCards, setTypeVisibleCards] = useState(
+    TypeVisibleCards.All
+  );
   const [debouncedSearch, setDebouncedSearch] = useState<string>(search);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   useEffect(() => {
-    fetchProducts(currentPage);
-  }, [fetchProducts, currentPage, products.length]);
+    productService.loadData(currentPage);
+  }, [currentPage]);
+
+  const totalPages = Math.ceil(allProducts.length / ITEMS_PER_PAGE);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search.trim()), DelaySearchMs);
+    const t = setTimeout(
+      () => setDebouncedSearch(search.trim()),
+      DELAY_SEARCH_MS
+    );
     return () => clearTimeout(t);
   }, [search]);
 
+  const products: Product[] = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = Math.min(currentPage * ITEMS_PER_PAGE, allProducts.length);
+    const productsForPage = allProducts.slice(start, end);
+    return productsForPage;
+  }, [allProducts, currentPage]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      const start = (currentPage - 1) * ITEMS_PER_PAGE;
+      if (start >= allProducts.length) {
+        setTimeout(() => setCurrentPage((p) => Math.max(1, p - 1)), 0);
+      }
+    }
+  }, [allProducts, currentPage]);
+
   const filteredProducts = useMemo(() => {
-    let list = visibleFilter === TypeVisibleCards.Favorites
-      ? products.filter((product) => favorites.has(product.id))
-      : products;
+    let list =
+      typeVisibleCards === TypeVisibleCards.Favorites
+        ? products.filter((product) => favorites.has(product.id))
+        : products;
 
-    const q = debouncedSearch.toLowerCase();
-    if (q) {
-      const num = Number(q);
-      const isNum = !isNaN(num);
-
-      list = list.filter(p => {
-        const titleMatch = p.title.toLowerCase().includes(q);
-        const descMatch = p.description.toLowerCase().includes(q);
-        const priceMatch = isNum && Number(p.price) === num;
-        return titleMatch || descMatch || priceMatch;
+    const query = debouncedSearch.toLowerCase();
+    if (query) {
+      list = list.filter((p) => {
+        const titleMatch = p.title.toLowerCase().includes(query);
+        const isbnMatch = p.isbn.toLowerCase().includes(query);
+        return titleMatch || isbnMatch;
       });
     }
 
     return list;
-  }, [products, favorites, visibleFilter, debouncedSearch]);
-  
+  }, [products, favorites, typeVisibleCards, debouncedSearch]);
+
   return (
     <div className="max-w-[600px] mx-auto px-4">
       <h1 className="text-2xl mb-4">List products</h1>
@@ -64,26 +85,26 @@ export default function Products() {
             onChange={(e) => setSearch(e.target.value)}
             className="border p-2 rounded w-full md:w-1/2"
           />
-        <button
-          onClick={() => setVisibleFilter(TypeVisibleCards.All)}
-          className={`mr-2 p-2 ${
-            visibleFilter === TypeVisibleCards.All
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200"
-          }`}
-        >
-          All cards
-        </button>
-        <button
-          onClick={() => setVisibleFilter(TypeVisibleCards.Favorites)}
-          className={`p-2 ${
-            visibleFilter === TypeVisibleCards.Favorites
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200"
-          }`}
-        >
-          Favorites
-        </button>
+          <button
+            onClick={() => setTypeVisibleCards(TypeVisibleCards.All)}
+            className={`mr-2 p-2 ${
+              typeVisibleCards === TypeVisibleCards.All
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200"
+            }`}
+          >
+            All cards
+          </button>
+          <button
+            onClick={() => setTypeVisibleCards(TypeVisibleCards.Favorites)}
+            className={`p-2 ${
+              typeVisibleCards === TypeVisibleCards.Favorites
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200"
+            }`}
+          >
+            Favorites
+          </button>
         </div>
       </div>
 
@@ -97,15 +118,14 @@ export default function Products() {
             />
           ))}
         </div>
-  {visibleFilter === TypeVisibleCards.All && (
+        {typeVisibleCards === TypeVisibleCards.All && (
           <>
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(products.length / ItemsPerPage)}
+              totalPages={totalPages}
               isLoading={loading}
               onPageChange={(page) => {
-                if (loading) return;
-                fetchProducts(page);
+                setCurrentPage(page);
               }}
             />
           </>

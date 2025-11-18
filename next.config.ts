@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Базовая конфигурация без экспериментальных функций
+ // basePath: '/build',
+ // output: "export",
   images: {
     unoptimized: true
   }

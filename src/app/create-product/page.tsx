@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useProductStore } from '../../store/productStore'
+import { productService } from '@/services/productService'
 
 export default function CreateProductPage() {
   const router = useRouter()
-  const addProduct = useProductStore(state => state.addProduct)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -32,7 +31,7 @@ export default function CreateProductPage() {
     if (!validate()) return
     setSubmitting(true)
     try {
-      addProduct({ title: title.trim(), description: description.trim(), price: Number(price), thumbnail: thumbnail.trim() })
+      productService.addProduct({ title: title.trim(), isbn: description.trim(), pageCount: Number(price), authors: [thumbnail.trim()] })
       router.push('/')
     } catch (err) {
       console.error('Error adding product', err)

@@ -1,6 +1,6 @@
 "use client";
 
-import { PaginationButtonCount } from "./configs/Config";
+import { PAGINATION_BUTTONS_COUNT } from "../configs/Config";
 
 interface PaginationProps {
   currentPage: number;
@@ -17,7 +17,7 @@ export default function Pagination({
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
-  const maxButtons = Math.max(1, PaginationButtonCount);
+  const maxButtons = Math.max(1, PAGINATION_BUTTONS_COUNT);
 
   const half = Math.floor(maxButtons / 2);
   let start = currentPage - half;
