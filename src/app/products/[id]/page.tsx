@@ -3,7 +3,7 @@
 import { Suspense, use } from "react";
 import ProductDetail from "../../../components/ProductDetail";
 import LoadingSpinner from "../../../components/LoadingSpinner";
-import { useProductStore } from "@/store/productStore";
+import { useProductsStore } from "@/store/productStore";
 
 export default function ProductDetailPage({
   params,
@@ -11,7 +11,7 @@ export default function ProductDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = use(params);
-  const getProductById = useProductStore((state) => state.getProductById);
+  const getProductById = useProductsStore((state) => state.getProductById);
 
   const product = getProductById
     ? getProductById(resolvedParams.id)

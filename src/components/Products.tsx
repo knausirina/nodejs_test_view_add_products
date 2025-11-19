@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useProductStore } from "../store/productStore";
-import { productService } from "@/services/productService";
+import { useProductsStore as useProductsStore } from "../store/productStore";
 import ProductCard from "./ProductCard";
 import Pagination from "./Pagination";
 import { DELAY_SEARCH_MS, ITEMS_PER_PAGE } from "../configs/Config";
@@ -14,20 +13,24 @@ enum TypeVisibleCards {
 }
 
 export default function Products() {
-  const allProducts = useProductStore((state) => state.books);
-  const favorites = useProductStore((state) => state.favorites);
-  const loading = useProductStore((state) => state.loading);
+  const allProducts = useProductsStore((state) => state.products);
+  const favorites = useProductsStore((state) => state.favorites);
+  const loading = useProductsStore((state) => state.loading);
+  const currentPage = useProductsStore((state) => state.currentPage);
 
   const [search, setSearch] = useState("");
   const [typeVisibleCards, setTypeVisibleCards] = useState(
     TypeVisibleCards.All
   );
   const [debouncedSearch, setDebouncedSearch] = useState<string>(search);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  console.log("currentPage ", currentPage);
+
+ const productsStore = useProductsStore.getState();
 
   useEffect(() => {
-    productService.loadData(currentPage);
-  }, [currentPage]);
+    productsStore.fetchProducts();
+  });
 
   const totalPages = Math.ceil(allProducts.length / ITEMS_PER_PAGE);
 
@@ -39,7 +42,7 @@ export default function Products() {
     return () => clearTimeout(t);
   }, [search]);
 
-  const products: Product[] = useMemo(() => {
+  const productsOnPage: Product[] = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     const end = Math.min(currentPage * ITEMS_PER_PAGE, allProducts.length);
     const productsForPage = allProducts.slice(start, end);
@@ -50,16 +53,16 @@ export default function Products() {
     if (currentPage > 1) {
       const start = (currentPage - 1) * ITEMS_PER_PAGE;
       if (start >= allProducts.length) {
-        setTimeout(() => setCurrentPage((p) => Math.max(1, p - 1)), 0);
+        setTimeout(() =>  productsStore.setPage(Math.max(1, currentPage)));
       }
     }
-  }, [allProducts, currentPage]);
+  }, [allProducts, currentPage, productsStore]);
 
   const filteredProducts = useMemo(() => {
     let list =
       typeVisibleCards === TypeVisibleCards.Favorites
-        ? products.filter((product) => favorites.has(product.id))
-        : products;
+        ? productsOnPage.filter((product) => favorites.has(product.id))
+        : productsOnPage;
 
     const query = debouncedSearch.toLowerCase();
     if (query) {
@@ -71,7 +74,7 @@ export default function Products() {
     }
 
     return list;
-  }, [products, favorites, typeVisibleCards, debouncedSearch]);
+  }, [productsOnPage, favorites, typeVisibleCards, debouncedSearch]);
 
   return (
     <div className="max-w-[600px] mx-auto px-4">
@@ -125,7 +128,7 @@ export default function Products() {
               totalPages={totalPages}
               isLoading={loading}
               onPageChange={(page) => {
-                setCurrentPage(page);
+                productsStore.setPage(page);
               }}
             />
           </>

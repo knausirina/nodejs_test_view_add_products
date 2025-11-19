@@ -4,34 +4,38 @@ import { getUnicId } from "@/app/utils/unicId";
 import { API_URL } from "@/configs/Config";
 
 interface ProductsState {
-  books: Product[];
+  products: Product[];
   favorites: Set<string>;
   loading: boolean;
   loaded: boolean;
-  fetchProducts: (page?: number) => Promise<void>;
+  currentPage: number;
+  fetchProducts: () => Promise<void>;
   toggleLike: (id: string) => void;
   addProduct: (product: Omit<Product, "id">) => void;
   getProductById: (id: string) => Product | undefined;
   deleteProduct: (id: string) => void;
+  setPage: (page: number) => void;
 }
 
-export const useProductStore = create<ProductsState>((set, get) => {
+export const useProductsStore = create<ProductsState>((set, get) => {
   return {
-    books: [] as Product[],
+    products: [] as Product[],
     favorites: new Set<string>(),
+    currentPage: 1,
     loading: false,
     loaded: false,
 
-    setPage: (page: number) =>
-      set((state) => ({ ...state, currentPage: page })),
-    setVisibleFilter: (visibleFilter: number) =>
-      set((state) => ({ ...state, visibleFilter: visibleFilter })),
-
-    fetchProducts: async (page = 1) => {
+    setPage: (newPage: number) => {
+      set((state) => {
+        return {
+          ...state,
+          currentPage: newPage,
+        };
+      });
+    },
+    fetchProducts: async () => {
       const stateBefore = get();
-
       if (stateBefore.loaded) {
-        set((s) => ({ ...s, currentPage: page }));
         return;
       }
 
@@ -44,8 +48,6 @@ export const useProductStore = create<ProductsState>((set, get) => {
       try {
         const url = new URL(API_URL);
 
-        console.log(`[Store] Fetching from ${url.toString()}`);
-
         const response = await fetch(url.toString());
 
         if (!response.ok) {
@@ -53,20 +55,16 @@ export const useProductStore = create<ProductsState>((set, get) => {
         }
 
         const data = await response.json();
-        let books: Product[] = [];
-        let totalCount: number = 0;
+        let products: Product[] = [];
 
-        if (Array.isArray(data)) books = data;
-        else books = data.books || data.data || [];
+        if (Array.isArray(data)) products = data;
+        else products = data.books || data.data || [];
 
-        totalCount = data.length;
-        const mergedProducts = [...books, ...stateBefore.books];
+        const mergedProducts = [...products, ...stateBefore.products];
 
         set((state) => ({
           ...state,
-          books: mergedProducts,
-          currentPage: page,
-          totalProducts: totalCount,
+          products: mergedProducts,
           loading: false,
           loaded: true,
         }));
@@ -92,25 +90,18 @@ export const useProductStore = create<ProductsState>((set, get) => {
     },
     getProductById: (id: string): Product | undefined => {
       const state = get();
-      return state.books.find((p) => p.id == id);
+      return state.products.find((p) => p.id == id);
     },
     deleteProduct: (id: string) => {
       set((state) => {
-        const newProducts = state.books.filter(
+        const newProducts = state.products.filter(
           (product) => product.id !== id
         );
-        const oldCount = state.books.length;
-        const newCount = oldCount - 1;
-        console.log(
-          "xxx newCount newProducts.count=",
-          newProducts.length,
-          " oldCount =",
-          oldCount
-        );
+        const totalProducts = newProducts.length;
         return {
           ...state,
-          books: newProducts,
-          totalProducts: newCount,
+          products: newProducts,
+          totalProducts: totalProducts,
         };
       });
     },
@@ -121,10 +112,10 @@ export const useProductStore = create<ProductsState>((set, get) => {
           id,
           ...newProduct,
         };
-        const oldCount = state.books.length;
+        const oldCount = state.products.length;
         return {
           ...state,
-          books: [product, ...state.books],
+          products: [product, ...state.products],
           totalProducts: oldCount + 1,
         };
       });

@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { productService } from "@/services/productService";
 import { Heart, Trash } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
+import { useProductsStore } from "../store/productStore";
 
 interface ProductCardProps {
   product: Product;
@@ -13,17 +13,18 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, isLiked }: ProductCardProps) => {
+  const productsStore = useProductsStore.getState();
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    productService.deleteProduct(product.id);
+    productsStore.deleteProduct(product.id);
   };
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    console.log("like toggled for product id:", product.id);
-    productService.toggleFavorite(product.id);
+    productsStore.toggleLike(product.id);
   };
 
   return (
@@ -61,10 +62,20 @@ const ProductCard = ({ product, isLiked }: ProductCardProps) => {
 
         <div className="flex mt-auto">
           <div className="">
-            <button onClick={handleLike} className="rounded-full p-2 hover:bg-gray-200">
-              <Heart color={isLiked ? "red" : "gray"} fill={isLiked ? "red" : "gray"} size={20}/>
+            <button
+              onClick={handleLike}
+              className="rounded-full p-2 hover:bg-gray-200"
+            >
+              <Heart
+                color={isLiked ? "red" : "gray"}
+                fill={isLiked ? "red" : "gray"}
+                size={20}
+              />
             </button>
-            <button onClick={handleDelete} className="rounded-full p-2 hover:bg-gray-200">
+            <button
+              onClick={handleDelete}
+              className="rounded-full p-2 hover:bg-gray-200"
+            >
               <Trash className="text-gray-400" size={20} />
             </button>
           </div>
