@@ -1,7 +1,12 @@
 self.__BUILD_MANIFEST = {
   "__rewrites": {
     "afterFiles": [],
-    "beforeFiles": [],
+    "beforeFiles": [
+      {
+        "source": "/nodejs_test_view_add_products//_next/:path+",
+        "destination": "/nodejs_test_view_add_products/_next/:path+"
+      }
+    ],
     "fallback": []
   },
   "sortedPages": [
