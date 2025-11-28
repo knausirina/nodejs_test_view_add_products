@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProductsStore } from "@/store/productStore";
+import { Product } from "@/types/product";
 
 export default function CreateProductPage() {
   const router = useRouter();
@@ -23,7 +24,6 @@ export default function CreateProductPage() {
     const p = Number(pageCount);
     if (isNaN(p) || p <= 0) e.pageCount = "pageCount must be a number greater than 0";
     
-    // Check for empty authors
     const emptyAuthors = authors.filter(a => !a.trim());
     if (emptyAuthors.length > 0) e.authors = `${emptyAuthors.length} author field(s) are empty`;
     

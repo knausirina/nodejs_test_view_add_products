@@ -1,8 +1,10 @@
+import { BASE_PATH } from '@/configs/Config';
 import Link from 'next/link';
 
 export default function Header() {
   return (
     <header className="bg-blue-600 text-white p-4 shadow-md">
+      <link rel="icon" href={`${BASE_PATH}/favicon.png`} type="image/png" />
       <nav className="flex justify-between items-center max-w-6xl mx-auto">
         <Link href="/" className="text-2xl font-bold">
           Next.js App

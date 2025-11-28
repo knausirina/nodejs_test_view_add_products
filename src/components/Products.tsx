@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useProductsStore as useProductsStore } from "../store/productStore";
+import { useProductsStore } from "../store/productStore";
 import ProductCard from "./ProductCard";
 import Pagination from "./Pagination";
 import { DELAY_SEARCH_MS, ITEMS_PER_PAGE } from "../configs/Config";
@@ -23,13 +23,11 @@ export default function Products() {
     TypeVisibleCards.All
   );
   const [debouncedSearch, setDebouncedSearch] = useState<string>(search);
-
-  console.log("currentPage ", currentPage);
-
- const productsStore = useProductsStore.getState();
+  const productsStore = useProductsStore.getState();
 
   useEffect(() => {
-    productsStore.fetchProducts();
+    if (!productsStore.loaded)
+      productsStore.fetchProducts();
   });
 
   const totalPages = Math.ceil(allProducts.length / ITEMS_PER_PAGE);
@@ -53,7 +51,7 @@ export default function Products() {
     if (currentPage > 1) {
       const start = (currentPage - 1) * ITEMS_PER_PAGE;
       if (start >= allProducts.length) {
-        setTimeout(() =>  productsStore.setPage(Math.max(1, currentPage)));
+        setTimeout(() => productsStore.setPage(Math.max(1, currentPage - 1)));
       }
     }
   }, [allProducts, currentPage, productsStore]);
@@ -61,7 +59,7 @@ export default function Products() {
   const filteredProducts = useMemo(() => {
     let list =
       typeVisibleCards === TypeVisibleCards.Favorites
-        ? productsOnPage.filter((product) => favorites.has(product.id))
+        ? productsOnPage.filter((product) => favorites.includes(product.id))
         : productsOnPage;
 
     const query = debouncedSearch.toLowerCase();
@@ -117,7 +115,7 @@ export default function Products() {
             <ProductCard
               key={product.id}
               product={product}
-              isLiked={favorites.has(product.id)}
+              isLiked={favorites.includes(product.id)}
             />
           ))}
         </div>

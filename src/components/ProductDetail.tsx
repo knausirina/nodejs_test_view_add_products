@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Product } from "../types/product";
+import { BASE_PATH } from "@/configs/Config";
 
 interface ProductDetailProps {
   product: Product | undefined;
@@ -23,14 +24,14 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 w-164 mx-auto">
       <button onClick={() => router.back()} className="mb-4 text-blue-500">
         &larr; Back to products
       </button>
       <Image
         width={400}
         height={400}
-        src="/images/book.png"
+        src={`${BASE_PATH}/images/book.png`}
         alt={product.title}
         className=" object-contain mb-4"
       />
