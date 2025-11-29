@@ -2,11 +2,10 @@ import { Suspense } from "react";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import { Product } from "@/types/product";
 import ClientProductDetail from "../../../components/ClientProductDetail";
-import { REVALIDATE_TIME } from "@/configs/Config";
+import { API_URL, REVALIDATE_TIME } from "@/configs/Config";
 
 export async function generateStaticParams() {
   try {
-    const { API_URL } = await import("@/configs/Config");
     const response = await fetch(API_URL, { next: { revalidate: REVALIDATE_TIME } });
 
     if (!response.ok) {

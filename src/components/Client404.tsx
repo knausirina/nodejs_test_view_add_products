@@ -10,7 +10,7 @@ const Client404 = () => {
   const match = pathname?.match(/^\/products\/([^\/]+)/);
   const slug = match?.[1] ?? null;
 
-  const normalizedSlug = slug?.startsWith("id-") ? slug.slice(3) : slug?.trim();
+  const normalizedSlug = slug?.trim();
 
   const productsStore = useProductsStore.getState();
   let product = null;

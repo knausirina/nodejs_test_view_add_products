@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProductsStore } from "@/store/productStore";
-import { Product } from "@/types/product";
 
 export default function CreateProductPage() {
   const router = useRouter();
